@@ -9,6 +9,14 @@ class FlappyBirdGame {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
+        // Frame rate independence
+        this.lastTime = 0;
+        this.targetFPS = 60;
+        this.deltaTime = 1;
+        this.frameCount = 0;
+        this.lastFPSTime = 0;
+        this.currentFPS = 0;
+        
         // Game state
         this.gameState = 'start'; // 'start', 'ready', 'playing', 'gameOver'
         this.score = 0;
@@ -19,9 +27,9 @@ class FlappyBirdGame {
         this.leaderboard = this.loadLeaderboard();
         
         // Game settings - base values that will scale with score
-        this.baseGravity = 0.2;
-        this.baseJumpStrength = -3.25;
-        this.basePipeSpeed = 2.3;
+        this.baseGravity = 0.3;
+        this.baseJumpStrength = -4.5;
+        this.basePipeSpeed = 3.5;
         this.pipeGap = 150;
         this.pipeWidth = 60;
         
@@ -455,20 +463,20 @@ class FlappyBirdGame {
         
         // Update bird physics (only when playing, not when ready)
         if (this.gameState === 'playing') {
-            this.bird.velocity += this.gravity;
-            this.bird.y += this.bird.velocity;
+            this.bird.velocity += this.gravity * this.deltaTime;
+            this.bird.y += this.bird.velocity * this.deltaTime;
             
             // Update bird rotation based on velocity
             this.bird.rotation = Math.min(Math.max(this.bird.velocity * 3, -30), 90);
         }
         
         // Update bird flap animation (always animate the flapping)
-        this.bird.flapFrame++;
+        this.bird.flapFrame += this.deltaTime;
         
         // Update background scrolling (only when playing)
         if (this.gameState === 'playing') {
-            this.backgroundOffset -= this.pipeSpeed * 0.25; // Background scrolls at 25% of pipe speed
-            this.groundOffset -= this.pipeSpeed;
+            this.backgroundOffset -= this.pipeSpeed * 0.25 * this.deltaTime; // Background scrolls at 25% of pipe speed
+            this.groundOffset -= this.pipeSpeed * this.deltaTime;
             
             if (this.groundOffset <= -50) {
                 this.groundOffset = 0;
@@ -479,7 +487,7 @@ class FlappyBirdGame {
         if (this.gameState === 'playing') {
             for (let i = this.pipes.length - 1; i >= 0; i--) {
                 const pipe = this.pipes[i];
-                pipe.x -= this.pipeSpeed;
+                pipe.x -= this.pipeSpeed * this.deltaTime;
                 
                 // Check if bird passed through pipe
                 if (!pipe.passed && pipe.x + this.pipeWidth < this.bird.x) {
@@ -512,10 +520,10 @@ class FlappyBirdGame {
             }
             
             // Generate new pipes
-            if (this.lastPipeX - this.pipeSpeed <= this.canvas.width - this.pipeSpacing) {
+            if (this.lastPipeX - (this.pipeSpeed * this.deltaTime) <= this.canvas.width - this.pipeSpacing) {
                 this.generatePipe();
             }
-            this.lastPipeX -= this.pipeSpeed;
+            this.lastPipeX -= this.pipeSpeed * this.deltaTime;
             
             // Check collisions
             this.checkCollisions();
@@ -1224,10 +1232,28 @@ class FlappyBirdGame {
         this.drawScore();
     }
     
-    gameLoop() {
+    gameLoop(currentTime = 0) {
+        // Calculate delta time for frame rate independence
+        const deltaTime = currentTime - this.lastTime;
+        this.lastTime = currentTime;
+        
+        // Target 60 FPS - normalize delta time
+        // Cap delta time to prevent large jumps when tab becomes active after being inactive
+        this.deltaTime = Math.min(deltaTime / (1000 / this.targetFPS), 3);
+        
+        // FPS counter for debugging
+        this.frameCount++;
+        if (currentTime - this.lastFPSTime >= 1000) {
+            this.currentFPS = this.frameCount;
+            this.frameCount = 0;
+            this.lastFPSTime = currentTime;
+            // Uncomment the line below to see FPS in console
+            // console.log('FPS:', this.currentFPS);
+        }
+        
         this.updateGame();
         this.render();
-        requestAnimationFrame(() => this.gameLoop());
+        requestAnimationFrame((time) => this.gameLoop(time));
     }
     
     playSound(soundName) {
