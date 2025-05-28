@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Classic Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Flappy Bird</h1>
+            <div class="score-display">
+                <span>Score: </span>
+                <span id="score">0</span>
+            </div>
+            <div class="high-score-display">
+                <span>Best: </span>
+                <span id="highScore">0</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+            
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="game-over-screen hidden">
+                <div class="game-over-content">
+                    <h2>Game Over!</h2>
+                    <p>Score: <span id="finalScore">0</span></p>
+                    <p>Best: <span id="finalHighScore">0</span></p>
+                    <button id="restartBtn" class="restart-btn">Play Again</button>
+                </div>
+            </div>
+            
+            <!-- Start Screen -->
+            <div id="startScreen" class="start-screen">
+                <div class="start-content">
+                    <h2>Flappy Bird</h2>
+                    <p>Click or tap to flap!</p>
+                    <button id="startBtn" class="start-btn">Start Game</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <p>🖱️ Click or 📱 Tap to flap your wings!</p>
+        </div>
+    </div>
+    
+    <!-- Audio Elements -->
+    <audio id="flapSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+    <audio id="scoreSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+    <audio id="gameOverSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html> 
