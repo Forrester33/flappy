@@ -29,7 +29,13 @@
                     <h2>Game Over!</h2>
                     <p>Score: <span id="finalScore">0</span></p>
                     <p>Best: <span id="finalHighScore">0</span></p>
-                    <button id="restartBtn" class="restart-btn">Play Again</button>
+                    <div id="rankingDisplay" class="ranking-display">
+                        <!-- Player ranking will be shown here -->
+                    </div>
+                    <div class="game-over-buttons">
+                        <button id="restartBtn" class="restart-btn">Play Again</button>
+                        <button id="showLeaderboardBtn" class="show-leaderboard-btn">View Leaderboard</button>
+                    </div>
                 </div>
             </div>
             
@@ -37,8 +43,26 @@
             <div id="startScreen" class="start-screen">
                 <div class="start-content">
                     <h2>Buttery Otters</h2>
-                    <p>Click or tap to get buttery!</p>
-                    <button id="startBtn" class="start-btn">Start Game</button>
+                    <div id="nameEntry" class="name-entry">
+                        <p>Enter your name for the leaderboard:</p>
+                        <input type="text" id="playerName" placeholder="Your name" maxlength="20" autocomplete="off">
+                        <button id="startBtn" class="start-btn">Start Game</button>
+                    </div>
+                    <p>🖱️ Click or 📱 Tap to swim through the butter!</p>
+                </div>
+            </div>
+            
+            <!-- Leaderboard Screen -->
+            <div id="leaderboardScreen" class="leaderboard-screen hidden">
+                <div class="leaderboard-content">
+                    <h2>🏆 Leaderboard 🏆</h2>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <!-- Leaderboard entries will be populated here -->
+                    </div>
+                    <div class="leaderboard-buttons">
+                        <button id="playAgainFromLeaderboardBtn" class="play-again-btn">Play Again</button>
+                        <button id="backToGameBtn" class="back-to-game-btn">Back to Game</button>
+                    </div>
                 </div>
             </div>
         </div>

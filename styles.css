@@ -225,8 +225,209 @@ body {
 
 /* Pixel-perfect styling for retro feel */
 canvas {
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-crisp-edges;
     image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+}
+
+/* Leaderboard Styles */
+.name-entry {
+    margin: 20px 0;
+}
+
+.name-entry p {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 1.1em;
+}
+
+#playerName {
+    width: 100%;
+    max-width: 250px;
+    padding: 12px 15px;
+    font-size: 1.1em;
+    border: 2px solid #2c3e50;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+#playerName:focus {
+    outline: none;
+    border-color: #f39c12;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+}
+
+.leaderboard-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    z-index: 15;
+}
+
+.leaderboard-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    border: 3px solid #2c3e50;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    min-width: 300px;
+}
+
+.leaderboard-content h2 {
+    color: #2c3e50;
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0px #f39c12;
+}
+
+.leaderboard-list {
+    margin-bottom: 25px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: rgba(52, 73, 94, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.leaderboard-entry:hover {
+    background: rgba(52, 73, 94, 0.2);
+    transform: translateX(5px);
+}
+
+.leaderboard-entry.current-player {
+    background: rgba(243, 156, 18, 0.2);
+    border-left-color: #f39c12;
+    font-weight: bold;
+}
+
+.leaderboard-entry.top-3 {
+    background: rgba(241, 196, 15, 0.2);
+    border-left-color: #f1c40f;
+}
+
+.leaderboard-rank {
+    font-weight: bold;
+    color: #2c3e50;
+    min-width: 40px;
+    text-align: left;
+}
+
+.leaderboard-name {
+    flex-grow: 1;
+    text-align: left;
+    margin-left: 15px;
+    color: #2c3e50;
+}
+
+.leaderboard-score {
+    font-weight: bold;
+    color: #27ae60;
+    min-width: 60px;
+    text-align: right;
+}
+
+.leaderboard-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.play-again-btn, .show-leaderboard-btn, .back-to-game-btn {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #2c3e50;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.play-again-btn:hover, .show-leaderboard-btn:hover, .back-to-game-btn:hover {
+    background: linear-gradient(45deg, #FFA500, #FF8C00);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.ranking-display {
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(243, 156, 18, 0.1);
+    border-radius: 10px;
+    border: 2px solid #f39c12;
+}
+
+.ranking-display h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+}
+
+.ranking-display p {
+    color: #2c3e50;
+    font-size: 1.1em;
+    margin: 5px 0;
+}
+
+.game-over-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+/* Mobile responsiveness for leaderboard */
+@media (max-width: 768px) {
+    .leaderboard-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .leaderboard-content h2 {
+        font-size: 1.5em;
+    }
+    
+    .leaderboard-entry {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    .leaderboard-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .play-again-btn, .show-leaderboard-btn, .back-to-game-btn {
+        width: 100%;
+        max-width: 200px;
+    }
 } 

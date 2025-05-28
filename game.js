@@ -14,12 +14,21 @@ class FlappyBirdGame {
         this.score = 0;
         this.highScore = localStorage.getItem('flappyBirdHighScore') || 0;
         
-        // Game settings
-        this.gravity = 0.15;
-        this.jumpStrength = -2.75;
-        this.pipeSpeed = 2;
+        // Player and leaderboard
+        this.playerName = '';
+        this.leaderboard = this.loadLeaderboard();
+        
+        // Game settings - base values that will scale with score
+        this.baseGravity = 0.5;
+        this.baseJumpStrength = -4.5;
+        this.basePipeSpeed = 7;
         this.pipeGap = 150;
         this.pipeWidth = 60;
+        
+        // Current dynamic values (will be updated based on score)
+        this.gravity = this.baseGravity;
+        this.jumpStrength = this.baseJumpStrength;
+        this.pipeSpeed = this.basePipeSpeed;
         
         // Bird properties
         this.bird = {
@@ -66,6 +75,15 @@ class FlappyBirdGame {
         this.finalScoreElement = document.getElementById('finalScore');
         this.finalHighScoreElement = document.getElementById('finalHighScore');
         
+        // Leaderboard UI elements
+        this.playerNameInput = document.getElementById('playerName');
+        this.leaderboardScreen = document.getElementById('leaderboardScreen');
+        this.leaderboardList = document.getElementById('leaderboardList');
+        this.rankingDisplay = document.getElementById('rankingDisplay');
+        this.showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+        this.playAgainFromLeaderboardBtn = document.getElementById('playAgainFromLeaderboardBtn');
+        this.backToGameBtn = document.getElementById('backToGameBtn');
+        
         // Initialize the game
         this.init();
     }
@@ -93,6 +111,26 @@ class FlappyBirdGame {
         // Restart button
         document.getElementById('restartBtn').addEventListener('click', () => {
             this.restartGame();
+        });
+        
+        // Leaderboard buttons
+        this.showLeaderboardBtn.addEventListener('click', () => {
+            this.showLeaderboard();
+        });
+
+        this.playAgainFromLeaderboardBtn.addEventListener('click', () => {
+            this.restartGame();
+        });
+
+        this.backToGameBtn.addEventListener('click', () => {
+            this.hideLeaderboard();
+        });
+
+        // Player name input
+        this.playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.startGame();
+            }
         });
         
         // Mouse and touch controls
@@ -208,6 +246,15 @@ class FlappyBirdGame {
     }
     
     startGame() {
+        // Get player name
+        const name = this.playerNameInput.value.trim();
+        if (!name) {
+            alert('Please enter your name!');
+            this.playerNameInput.focus();
+            return;
+        }
+        
+        this.playerName = name;
         this.gameState = 'ready';
         this.startScreen.classList.add('hidden');
         this.resetGame();
@@ -216,6 +263,8 @@ class FlappyBirdGame {
     restartGame() {
         this.gameState = 'ready';
         this.gameOverScreen.classList.add('hidden');
+        this.leaderboardScreen.classList.add('hidden');
+        this.startScreen.classList.remove('hidden');
         this.resetGame();
     }
     
@@ -234,6 +283,11 @@ class FlappyBirdGame {
         // Reset score
         this.score = 0;
         this.scoreElement.textContent = this.score;
+        
+        // Reset game speed to base values
+        this.gravity = this.baseGravity;
+        this.jumpStrength = this.baseJumpStrength;
+        this.pipeSpeed = this.basePipeSpeed;
         
         // Reset background
         this.backgroundOffset = 0;
@@ -396,7 +450,6 @@ class FlappyBirdGame {
         
         // Handle autopilot
         if (this.autopilot.active && (this.gameState === 'playing' || this.gameState === 'ready')) {
-            console.log('🧈 Running autopilot - State:', this.gameState, 'Pipes:', this.pipes.length, 'Y:', Math.round(this.bird.y), 'Velocity:', Math.round(this.bird.velocity * 100) / 100);
             this.handleAutopilot();
         }
         
@@ -414,7 +467,7 @@ class FlappyBirdGame {
         
         // Update background scrolling (only when playing)
         if (this.gameState === 'playing') {
-            this.backgroundOffset -= 0.5;
+            this.backgroundOffset -= this.pipeSpeed * 0.25; // Background scrolls at 25% of pipe speed
             this.groundOffset -= this.pipeSpeed;
             
             if (this.groundOffset <= -50) {
@@ -438,6 +491,9 @@ class FlappyBirdGame {
                         this.scoreElement.classList.remove('score-animation');
                     }, 300);
                     this.playSound('score');
+                    
+                    // Update game speed based on new score
+                    this.updateGameSpeed();
                     
                     // Decrease autopilot counter when passing a pipe
                     if (this.autopilot.active) {
@@ -467,6 +523,9 @@ class FlappyBirdGame {
     }
     
     handleAutopilot() {
+        // Calculate speed multiplier for dynamic thresholds
+        const speedMultiplier = this.pipeSpeed / this.basePipeSpeed;
+        
         // Find the next pipe that the otter needs to navigate
         let targetPipe = null;
         for (const pipe of this.pipes) {
@@ -476,76 +535,108 @@ class FlappyBirdGame {
             }
         }
         
+        // Emergency ceiling/ground avoidance (highest priority)
+        if (this.bird.y <= 20) {
+            // Too close to ceiling - don't flap, let gravity pull down
+            return;
+        }
+        
+        if (this.bird.y >= this.canvas.height - 120) {
+            // Too close to ground - emergency flap
+            this.bird.velocity = this.jumpStrength;
+            this.bird.flapFrame = 0;
+            this.playSound('flap');
+            return;
+        }
+        
         if (targetPipe) {
             // Calculate the ideal Y position (center of the gap)
             const gapCenter = targetPipe.topHeight + (targetPipe.bottomY - targetPipe.topHeight) / 2;
             const distanceToPipe = targetPipe.x - this.bird.x;
             
-            console.log('🧈 Pipe navigation - Distance:', Math.round(distanceToPipe), 'Gap center:', Math.round(gapCenter), 'Otter Y:', Math.round(this.bird.y));
+            // More conservative detection distance
+            const detectionDistance = 180 * Math.max(1.3, speedMultiplier);
             
-            // Only navigate when pipe is reasonably close
-            if (distanceToPipe < 150) {
-                // Flap if otter is too low for the gap (with some margin)
-                const margin = 30; // Give some buffer above gap center
-                if (this.bird.y > gapCenter - margin) {
+            if (distanceToPipe < detectionDistance) {
+                // Predict where otter will be when it reaches the pipe
+                const framesToPipe = distanceToPipe / this.pipeSpeed;
+                const predictedY = this.bird.y + (this.bird.velocity * framesToPipe) + (0.5 * this.gravity * framesToPipe * framesToPipe);
+                
+                // Conservative safety margins
+                const topMargin = 50 + (speedMultiplier - 1) * 25;
+                const bottomMargin = 35 + (speedMultiplier - 1) * 20;
+                
+                // Check if predicted position would be safe
+                const gapTop = targetPipe.topHeight + topMargin;
+                const gapBottom = targetPipe.bottomY - bottomMargin;
+                
+                // Only flap if we're definitely going to hit the bottom
+                // AND we're not already too high in the gap
+                const currentRelativePosition = (this.bird.y - targetPipe.topHeight) / (targetPipe.bottomY - targetPipe.topHeight);
+                
+                if (predictedY > gapBottom && currentRelativePosition > 0.3) {
+                    // Only flap if we're in the bottom 70% of the gap
                     this.bird.velocity = this.jumpStrength;
                     this.bird.flapFrame = 0;
                     this.playSound('flap');
-                    console.log('🧈 PIPE NAVIGATION FLAP! Target gap center:', Math.round(gapCenter));
                 }
             } else {
-                // Pipe is far away, just maintain reasonable height
+                // Pipe is far away - maintain safe height but be conservative
                 const targetHeight = this.canvas.height / 2;
-                if (this.bird.y > targetHeight + 50 || this.bird.velocity > 2) {
+                const maxVelocity = 2.0 * speedMultiplier; // Less aggressive velocity threshold
+                const heightTolerance = 40; // Slightly more tolerance
+                
+                if (this.bird.y > targetHeight + heightTolerance || this.bird.velocity > maxVelocity) {
                     this.bird.velocity = this.jumpStrength;
                     this.bird.flapFrame = 0;
                     this.playSound('flap');
-                    console.log('🧈 HEIGHT MAINTENANCE FLAP!');
                 }
             }
         } else {
-            // No pipe found - maintain center height
+            // No pipe found - conservative height maintenance
             const targetHeight = this.canvas.height / 2;
+            const maxVelocity = 2.0 * speedMultiplier;
+            const heightTolerance = 40;
             
-            // Only flap if significantly below center or falling fast
-            if (this.bird.y > targetHeight + 50 || this.bird.velocity > 2) {
+            if (this.bird.y > targetHeight + heightTolerance || this.bird.velocity > maxVelocity) {
                 this.bird.velocity = this.jumpStrength;
                 this.bird.flapFrame = 0;
                 this.playSound('flap');
-                console.log('🧈 NO PIPE - HEIGHT MAINTENANCE FLAP!');
             }
         }
     }
     
     checkCollisions() {
-        // Ground collision
+        // Ground collision (always active)
         if (this.bird.y + this.bird.height >= this.canvas.height - 100) {
             this.gameOver();
             return;
         }
         
-        // Ceiling collision
+        // Ceiling collision (always active)
         if (this.bird.y <= 0) {
             this.gameOver();
             return;
         }
         
-        // Pipe collisions
-        for (const pipe of this.pipes) {
-            // Check if bird is in pipe's x range
-            if (this.bird.x + this.bird.width > pipe.x && 
-                this.bird.x < pipe.x + this.pipeWidth) {
-                
-                // Check collision with top pipe
-                if (this.bird.y < pipe.topHeight) {
-                    this.gameOver();
-                    return;
-                }
-                
-                // Check collision with bottom pipe
-                if (this.bird.y + this.bird.height > pipe.bottomY) {
-                    this.gameOver();
-                    return;
+        // Pipe collisions (skip if autopilot is active)
+        if (!this.autopilot.active) {
+            for (const pipe of this.pipes) {
+                // Check if bird is in pipe's x range
+                if (this.bird.x + this.bird.width > pipe.x && 
+                    this.bird.x < pipe.x + this.pipeWidth) {
+                    
+                    // Check collision with top pipe
+                    if (this.bird.y < pipe.topHeight) {
+                        this.gameOver();
+                        return;
+                    }
+                    
+                    // Check collision with bottom pipe
+                    if (this.bird.y + this.bird.height > pipe.bottomY) {
+                        this.gameOver();
+                        return;
+                    }
                 }
             }
         }
@@ -555,6 +646,9 @@ class FlappyBirdGame {
         this.gameState = 'gameOver';
         this.playSound('gameOver');
         
+        // Add to leaderboard
+        const playerRank = this.addToLeaderboard(this.playerName, this.score);
+        
         // Update high score
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -562,10 +656,98 @@ class FlappyBirdGame {
             this.highScoreElement.textContent = this.highScore;
         }
         
+        // Show player ranking
+        this.showPlayerRanking(playerRank, this.leaderboard.length);
+        
         // Show game over screen
         this.finalScoreElement.textContent = this.score;
         this.finalHighScoreElement.textContent = this.highScore;
         this.gameOverScreen.classList.remove('hidden');
+    }
+    
+    loadLeaderboard() {
+        const saved = localStorage.getItem('butteryOttersLeaderboard');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveLeaderboard() {
+        localStorage.setItem('butteryOttersLeaderboard', JSON.stringify(this.leaderboard));
+    }
+
+    addToLeaderboard(name, score) {
+        // Add new score
+        this.leaderboard.push({
+            name: name,
+            score: score,
+            date: new Date().toISOString()
+        });
+        
+        // Sort by score (highest first)
+        this.leaderboard.sort((a, b) => b.score - a.score);
+        
+        // Keep only top 100 scores
+        this.leaderboard = this.leaderboard.slice(0, 100);
+        
+        // Save to localStorage
+        this.saveLeaderboard();
+        
+        // Return player's rank (1-based)
+        const playerRank = this.leaderboard.findIndex(entry => 
+            entry.name === name && entry.score === score
+        ) + 1;
+        
+        return playerRank;
+    }
+
+    showPlayerRanking(playerRank, totalPlayers) {
+        let rankingHTML = `<h3>🎯 Your Ranking</h3>`;
+        
+        if (playerRank === 1) {
+            rankingHTML += `<p>🏆 #1 - NEW HIGH SCORE! 🏆</p>`;
+        } else if (playerRank <= 3) {
+            rankingHTML += `<p>🥉 #${playerRank} - Top 3! Amazing! 🥉</p>`;
+        } else if (playerRank <= 10) {
+            rankingHTML += `<p>⭐ #${playerRank} - Top 10! Great job! ⭐</p>`;
+        } else {
+            rankingHTML += `<p>📊 Rank #${playerRank} out of ${totalPlayers} players</p>`;
+        }
+        
+        this.rankingDisplay.innerHTML = rankingHTML;
+    }
+
+    showLeaderboard() {
+        this.gameOverScreen.classList.add('hidden');
+        this.leaderboardScreen.classList.remove('hidden');
+        this.renderLeaderboard();
+    }
+
+    hideLeaderboard() {
+        this.leaderboardScreen.classList.add('hidden');
+        this.gameOverScreen.classList.remove('hidden');
+    }
+
+    renderLeaderboard() {
+        const leaderboardHTML = this.leaderboard.slice(0, 5).map((entry, index) => {
+            const rank = index + 1;
+            const isCurrentPlayer = entry.name === this.playerName && entry.score === this.score;
+            const isTop3 = rank <= 3;
+            
+            let rankEmoji = '';
+            if (rank === 1) rankEmoji = '🏆';
+            else if (rank === 2) rankEmoji = '🥈';
+            else if (rank === 3) rankEmoji = '🥉';
+            else rankEmoji = `#${rank}`;
+            
+            return `
+                <div class="leaderboard-entry ${isCurrentPlayer ? 'current-player' : ''} ${isTop3 ? 'top-3' : ''}">
+                    <span class="leaderboard-rank">${rankEmoji}</span>
+                    <span class="leaderboard-name">${entry.name}</span>
+                    <span class="leaderboard-score">${entry.score}</span>
+                </div>
+            `;
+        }).join('');
+        
+        this.leaderboardList.innerHTML = leaderboardHTML || '<p>No scores yet! Be the first!</p>';
     }
     
     drawBackground() {
@@ -1017,6 +1199,20 @@ class FlappyBirdGame {
             this.ctx.strokeText(text, this.canvas.width / 2, 60);
             this.ctx.fillText(text, this.canvas.width / 2, 60);
             
+            // Show speed multiplier when above 1x
+            const currentMultiplier = this.pipeSpeed / this.basePipeSpeed;
+            if (currentMultiplier > 1.05) { // Only show when noticeably faster
+                this.ctx.fillStyle = '#FF6B6B';
+                this.ctx.strokeStyle = '#8B0000';
+                this.ctx.lineWidth = 2;
+                this.ctx.font = 'bold 18px Courier New';
+                this.ctx.textAlign = 'center';
+                
+                const speedText = `🚀 ${currentMultiplier.toFixed(1)}x SPEED`;
+                this.ctx.strokeText(speedText, this.canvas.width / 2, 85);
+                this.ctx.fillText(speedText, this.canvas.width / 2, 85);
+            }
+            
             // Show autopilot indicator
             if (this.autopilot.active) {
                 this.ctx.fillStyle = '#FFE135';
@@ -1026,8 +1222,21 @@ class FlappyBirdGame {
                 this.ctx.textAlign = 'center';
                 
                 const autopilotText = `🧈 AUTOPILOT: ${this.autopilot.pipesRemaining} left 🦦`;
-                this.ctx.strokeText(autopilotText, this.canvas.width / 2, 90);
-                this.ctx.fillText(autopilotText, this.canvas.width / 2, 90);
+                const yPosition = currentMultiplier > 1.05 ? 110 : 90; // Adjust position if speed indicator is shown
+                this.ctx.strokeText(autopilotText, this.canvas.width / 2, yPosition);
+                this.ctx.fillText(autopilotText, this.canvas.width / 2, yPosition);
+                
+                // Show invincibility indicator
+                this.ctx.fillStyle = '#00FF00';
+                this.ctx.strokeStyle = '#008000';
+                this.ctx.lineWidth = 2;
+                this.ctx.font = 'bold 16px Courier New';
+                this.ctx.textAlign = 'center';
+                
+                const invincibleText = `🛡️ INVINCIBLE TO PIPES 🛡️`;
+                const invincibleY = yPosition + 25;
+                this.ctx.strokeText(invincibleText, this.canvas.width / 2, invincibleY);
+                this.ctx.fillText(invincibleText, this.canvas.width / 2, invincibleY);
             }
         }
     }
@@ -1061,6 +1270,25 @@ class FlappyBirdGame {
             }
         } catch (error) {
             console.log('Audio error:', error);
+        }
+    }
+    
+    updateGameSpeed() {
+        // Progressive speed increase based on score
+        // Speed increases every 5 points, but caps at reasonable levels
+        const speedMultiplier = 1 + (Math.floor(this.score / 5) * 0.1); // 10% increase every 5 points
+        const maxSpeedMultiplier = 2.5; // Cap at 2.5x speed to keep it playable
+        
+        const finalMultiplier = Math.min(speedMultiplier, maxSpeedMultiplier);
+        
+        // Update dynamic values
+        this.pipeSpeed = this.basePipeSpeed * finalMultiplier;
+        this.gravity = this.baseGravity * finalMultiplier;
+        this.jumpStrength = this.baseJumpStrength * finalMultiplier;
+        
+        // Debug info (only log when speed actually changes)
+        if (this.score % 5 === 0 && this.score > 0) {
+            console.log(`🚀 Speed increased! Score: ${this.score}, Multiplier: ${finalMultiplier.toFixed(1)}x`);
         }
     }
 }
