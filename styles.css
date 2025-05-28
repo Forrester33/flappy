@@ -12,8 +12,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
-    overflow: hidden;
+    padding: 20px 20px 60px 20px;
+    overflow-y: auto;
 }
 
 /* Game Container */
@@ -24,7 +24,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.2);
-    max-width: 500px;
+    max-width: 550px;
     width: 100%;
 }
 
@@ -111,8 +111,8 @@ body {
 
 /* Buttons */
 .start-btn, .restart-btn {
-    background: linear-gradient(45deg, #e74c3c, #c0392b);
-    color: white;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #2c3e50;
     border: none;
     padding: 15px 30px;
     font-size: 1.2em;
@@ -127,7 +127,7 @@ body {
 }
 
 .start-btn:hover, .restart-btn:hover {
-    background: linear-gradient(45deg, #c0392b, #a93226);
+    background: linear-gradient(45deg, #FFA500, #FF8C00);
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
@@ -178,7 +178,7 @@ body {
     
     #gameCanvas {
         width: 100%;
-        max-width: 350px;
+        max-width: 400px;
         height: auto;
     }
     
@@ -203,7 +203,7 @@ body {
     }
     
     #gameCanvas {
-        max-width: 300px;
+        max-width: 350px;
     }
     
     .start-btn, .restart-btn {
