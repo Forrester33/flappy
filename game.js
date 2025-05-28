@@ -19,9 +19,9 @@ class FlappyBirdGame {
         this.leaderboard = this.loadLeaderboard();
         
         // Game settings - base values that will scale with score
-        this.baseGravity = 0.5;
-        this.baseJumpStrength = -4.5;
-        this.basePipeSpeed = 7;
+        this.baseGravity = 0.2;
+        this.baseJumpStrength = -3.25;
+        this.basePipeSpeed = 2.3;
         this.pipeGap = 150;
         this.pipeWidth = 60;
         
@@ -55,7 +55,7 @@ class FlappyBirdGame {
         this.keySequenceTimeout = null;
         this.cheatSequence = ['b', 'u', 't', 't', 'e', 'r'];
         this.currentCheatIndex = 0; // Which letter we're expecting next
-        this.autopilot = {
+        this.otterpilot = {
             active: false,
             pipesRemaining: 0
         };
@@ -175,8 +175,8 @@ class FlappyBirdGame {
             console.log('🧈 Expecting "' + expectedKey + '", got "' + typedKey + '"');
             
             if (typedKey === expectedKey) {
-                // Correct key! Activate autopilot immediately
-                this.activateAutopilot();
+                // Correct key! Activate otterpilot immediately
+                this.activateOtterpilot();
                 
                 // Advance to next letter in sequence
                 this.currentCheatIndex++;
@@ -187,7 +187,7 @@ class FlappyBirdGame {
                 }
                 
                 const nextKey = this.cheatSequence[this.currentCheatIndex];
-                console.log('🧈 Autopilot activated! Next key will be "' + nextKey + '"');
+                console.log('🧈 Otterpilot activated! Next key will be "' + nextKey + '"');
             } else {
                 console.log('🧈 Wrong key! Expected "' + expectedKey + '", got "' + typedKey + '"');
                 // Wrong key - don't reset, just ignore it
@@ -195,36 +195,36 @@ class FlappyBirdGame {
         }
     }
     
-    activateAutopilot() {
-        console.log('🧈 ACTIVATING AUTOPILOT - Current state:', this.gameState);
+    activateOtterpilot() {
+        console.log('🧈 ACTIVATING OTTERPILOT - Current state:', this.gameState);
         
         // Auto-progress through game states if needed
         if (this.gameState === 'start') {
             console.log('🧈 Starting game from start state...');
-            this.startGame(); // This sets state to 'ready' and calls resetGame (which clears autopilot)
+            this.startGame(); // This sets state to 'ready' and calls resetGame (which clears otterpilot)
             console.log('🧈 Game started, state now:', this.gameState);
-            // Re-activate autopilot after the reset
-            this.autopilot.active = true;
-            this.autopilot.pipesRemaining = 15;
-            console.log('🧈 Autopilot re-activated after reset');
+            // Re-activate otterpilot after the reset
+            this.otterpilot.active = true;
+            this.otterpilot.pipesRemaining = 15;
+            console.log('🧈 Otterpilot re-activated after reset');
             // Then immediately start playing
             this.gameState = 'playing';
             console.log('🧈 State changed to playing');
         } else if (this.gameState === 'ready') {
             console.log('🧈 Activating from ready state...');
-            this.autopilot.active = true;
-            this.autopilot.pipesRemaining = 15;
+            this.otterpilot.active = true;
+            this.otterpilot.pipesRemaining = 15;
             this.gameState = 'playing';
         } else {
             console.log('🧈 Activating from playing state...');
             // Already playing
-            this.autopilot.active = true;
-            this.autopilot.pipesRemaining = 15;
+            this.otterpilot.active = true;
+            this.otterpilot.pipesRemaining = 15;
         }
         
-        console.log('🧈 Final autopilot state - Active:', this.autopilot.active, 'Remaining:', this.autopilot.pipesRemaining, 'Game state:', this.gameState);
+        console.log('🧈 Final otterpilot state - Active:', this.otterpilot.active, 'Remaining:', this.otterpilot.pipesRemaining, 'Game state:', this.gameState);
         
-        // Test immediate flap to verify autopilot is working
+        // Test immediate flap to verify otterpilot is working
         if (this.gameState === 'playing') {
             console.log('🧈 Testing immediate flap...');
             this.bird.velocity = this.jumpStrength;
@@ -242,7 +242,7 @@ class FlappyBirdGame {
         // Audio feedback if available
         this.playSound('score');
         
-        console.log('🧈 BUTTER CHEAT ACTIVATED! Autopilot for next 15 pipes! 🦦');
+        console.log('🧈 BUTTER CHEAT ACTIVATED! Otterpilot for next 15 pipes! 🦦');
     }
     
     startGame() {
@@ -293,9 +293,9 @@ class FlappyBirdGame {
         this.backgroundOffset = 0;
         this.groundOffset = 0;
         
-        // Reset autopilot
-        this.autopilot.active = false;
-        this.autopilot.pipesRemaining = 0;
+        // Reset otterpilot
+        this.otterpilot.active = false;
+        this.otterpilot.pipesRemaining = 0;
         this.keySequence = '';
         if (this.keySequenceTimeout) {
             clearTimeout(this.keySequenceTimeout);
@@ -310,8 +310,8 @@ class FlappyBirdGame {
     }
     
     flap() {
-        // Don't allow manual flapping during autopilot
-        if (this.autopilot.active) {
+        // Don't allow manual flapping during otterpilot
+        if (this.otterpilot.active) {
             return;
         }
         
@@ -448,9 +448,9 @@ class FlappyBirdGame {
     updateGame() {
         if (this.gameState !== 'playing' && this.gameState !== 'ready') return;
         
-        // Handle autopilot
-        if (this.autopilot.active && (this.gameState === 'playing' || this.gameState === 'ready')) {
-            this.handleAutopilot();
+        // Handle otterpilot
+        if (this.otterpilot.active && (this.gameState === 'playing' || this.gameState === 'ready')) {
+            this.handleOtterpilot();
         }
         
         // Update bird physics (only when playing, not when ready)
@@ -495,12 +495,12 @@ class FlappyBirdGame {
                     // Update game speed based on new score
                     this.updateGameSpeed();
                     
-                    // Decrease autopilot counter when passing a pipe
-                    if (this.autopilot.active) {
-                        this.autopilot.pipesRemaining--;
-                        if (this.autopilot.pipesRemaining <= 0) {
-                            this.autopilot.active = false;
-                            console.log('🧈 Autopilot deactivated! Manual control restored! 🦦');
+                    // Decrease otterpilot counter when passing a pipe
+                    if (this.otterpilot.active) {
+                        this.otterpilot.pipesRemaining--;
+                        if (this.otterpilot.pipesRemaining <= 0) {
+                            this.otterpilot.active = false;
+                            console.log('🧈 Otterpilot deactivated! Manual control restored! 🦦');
                         }
                     }
                 }
@@ -522,10 +522,7 @@ class FlappyBirdGame {
         }
     }
     
-    handleAutopilot() {
-        // Calculate speed multiplier for dynamic thresholds
-        const speedMultiplier = this.pipeSpeed / this.basePipeSpeed;
-        
+    handleOtterpilot() {
         // Find the next pipe that the otter needs to navigate
         let targetPipe = null;
         for (const pipe of this.pipes) {
@@ -536,12 +533,12 @@ class FlappyBirdGame {
         }
         
         // Emergency ceiling/ground avoidance (highest priority)
-        if (this.bird.y <= 20) {
+        if (this.bird.y <= 15) {
             // Too close to ceiling - don't flap, let gravity pull down
             return;
         }
         
-        if (this.bird.y >= this.canvas.height - 120) {
+        if (this.bird.y >= this.canvas.height - 115) {
             // Too close to ground - emergency flap
             this.bird.velocity = this.jumpStrength;
             this.bird.flapFrame = 0;
@@ -550,55 +547,30 @@ class FlappyBirdGame {
         }
         
         if (targetPipe) {
-            // Calculate the ideal Y position (center of the gap)
+            // Calculate the center of the gap
             const gapCenter = targetPipe.topHeight + (targetPipe.bottomY - targetPipe.topHeight) / 2;
-            const distanceToPipe = targetPipe.x - this.bird.x;
+            const birdCenter = this.bird.y + this.bird.height / 2;
             
-            // More conservative detection distance
-            const detectionDistance = 180 * Math.max(1.3, speedMultiplier);
+            // Simple logic: if bird is below the gap center, flap to go up
+            // Add a small buffer zone around the center to prevent oscillation
+            const bufferZone = 15; // pixels of tolerance around center
             
-            if (distanceToPipe < detectionDistance) {
-                // Predict where otter will be when it reaches the pipe
-                const framesToPipe = distanceToPipe / this.pipeSpeed;
-                const predictedY = this.bird.y + (this.bird.velocity * framesToPipe) + (0.5 * this.gravity * framesToPipe * framesToPipe);
-                
-                // Conservative safety margins
-                const topMargin = 50 + (speedMultiplier - 1) * 25;
-                const bottomMargin = 35 + (speedMultiplier - 1) * 20;
-                
-                // Check if predicted position would be safe
-                const gapTop = targetPipe.topHeight + topMargin;
-                const gapBottom = targetPipe.bottomY - bottomMargin;
-                
-                // Only flap if we're definitely going to hit the bottom
-                // AND we're not already too high in the gap
-                const currentRelativePosition = (this.bird.y - targetPipe.topHeight) / (targetPipe.bottomY - targetPipe.topHeight);
-                
-                if (predictedY > gapBottom && currentRelativePosition > 0.3) {
-                    // Only flap if we're in the bottom 70% of the gap
-                    this.bird.velocity = this.jumpStrength;
-                    this.bird.flapFrame = 0;
-                    this.playSound('flap');
-                }
-            } else {
-                // Pipe is far away - maintain safe height but be conservative
-                const targetHeight = this.canvas.height / 2;
-                const maxVelocity = 2.0 * speedMultiplier; // Less aggressive velocity threshold
-                const heightTolerance = 40; // Slightly more tolerance
-                
-                if (this.bird.y > targetHeight + heightTolerance || this.bird.velocity > maxVelocity) {
-                    this.bird.velocity = this.jumpStrength;
-                    this.bird.flapFrame = 0;
-                    this.playSound('flap');
-                }
+            if (birdCenter > gapCenter + bufferZone) {
+                // Bird is too low, flap to go up
+                this.bird.velocity = this.jumpStrength;
+                this.bird.flapFrame = 0;
+                this.playSound('flap');
             }
-        } else {
-            // No pipe found - conservative height maintenance
-            const targetHeight = this.canvas.height / 2;
-            const maxVelocity = 2.0 * speedMultiplier;
-            const heightTolerance = 40;
+            // If bird is above gapCenter - bufferZone, let gravity pull it down
+            // This creates a stable zone around the gap center
             
-            if (this.bird.y > targetHeight + heightTolerance || this.bird.velocity > maxVelocity) {
+        } else {
+            // No pipe found - maintain middle height
+            const targetHeight = this.canvas.height / 2;
+            const birdCenter = this.bird.y + this.bird.height / 2;
+            const bufferZone = 20;
+            
+            if (birdCenter > targetHeight + bufferZone) {
                 this.bird.velocity = this.jumpStrength;
                 this.bird.flapFrame = 0;
                 this.playSound('flap');
@@ -619,8 +591,8 @@ class FlappyBirdGame {
             return;
         }
         
-        // Pipe collisions (skip if autopilot is active)
-        if (!this.autopilot.active) {
+        // Pipe collisions (skip if otterpilot is active)
+        if (!this.otterpilot.active) {
             for (const pipe of this.pipes) {
                 // Check if bird is in pipe's x range
                 if (this.bird.x + this.bird.width > pipe.x && 
@@ -1213,18 +1185,18 @@ class FlappyBirdGame {
                 this.ctx.fillText(speedText, this.canvas.width / 2, 85);
             }
             
-            // Show autopilot indicator
-            if (this.autopilot.active) {
+            // Show otterpilot indicator
+            if (this.otterpilot.active) {
                 this.ctx.fillStyle = '#FFE135';
                 this.ctx.strokeStyle = '#CC9900';
                 this.ctx.lineWidth = 2;
                 this.ctx.font = 'bold 20px Courier New';
                 this.ctx.textAlign = 'center';
                 
-                const autopilotText = `🧈 AUTOPILOT: ${this.autopilot.pipesRemaining} left 🦦`;
+                const otterpilotText = `🧈 OTTERPILOT: ${this.otterpilot.pipesRemaining} left 🦦`;
                 const yPosition = currentMultiplier > 1.05 ? 110 : 90; // Adjust position if speed indicator is shown
-                this.ctx.strokeText(autopilotText, this.canvas.width / 2, yPosition);
-                this.ctx.fillText(autopilotText, this.canvas.width / 2, yPosition);
+                this.ctx.strokeText(otterpilotText, this.canvas.width / 2, yPosition);
+                this.ctx.fillText(otterpilotText, this.canvas.width / 2, yPosition);
                 
                 // Show invincibility indicator
                 this.ctx.fillStyle = '#00FF00';
@@ -1233,7 +1205,7 @@ class FlappyBirdGame {
                 this.ctx.font = 'bold 16px Courier New';
                 this.ctx.textAlign = 'center';
                 
-                const invincibleText = `🛡️ INVINCIBLE TO PIPES 🛡️`;
+                const invincibleText = `🛡️ INVINCIBLE TO BUTTER 🛡️`;
                 const invincibleY = yPosition + 25;
                 this.ctx.strokeText(invincibleText, this.canvas.width / 2, invincibleY);
                 this.ctx.fillText(invincibleText, this.canvas.width / 2, invincibleY);
@@ -1275,9 +1247,9 @@ class FlappyBirdGame {
     
     updateGameSpeed() {
         // Progressive speed increase based on score
-        // Speed increases every 5 points, but caps at reasonable levels
-        const speedMultiplier = 1 + (Math.floor(this.score / 5) * 0.1); // 10% increase every 5 points
-        const maxSpeedMultiplier = 2.5; // Cap at 2.5x speed to keep it playable
+        // Speed increases every 10 points, but caps at reasonable levels
+        const speedMultiplier = 1 + (Math.floor(this.score / 10) * 0.03); // 3% increase every 10 points (reduced from 5% every 5 points)
+        const maxSpeedMultiplier = 1.8; // Cap at 1.8x speed to keep it more playable (reduced from 2.0x)
         
         const finalMultiplier = Math.min(speedMultiplier, maxSpeedMultiplier);
         
@@ -1287,7 +1259,7 @@ class FlappyBirdGame {
         this.jumpStrength = this.baseJumpStrength * finalMultiplier;
         
         // Debug info (only log when speed actually changes)
-        if (this.score % 5 === 0 && this.score > 0) {
+        if (this.score % 10 === 0 && this.score > 0) {
             console.log(`🚀 Speed increased! Score: ${this.score}, Multiplier: ${finalMultiplier.toFixed(1)}x`);
         }
     }
